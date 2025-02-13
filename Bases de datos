@@ -1,0 +1,74 @@
+### 1. **usuarios**  
+   - **Descripción:** Esta tabla almacena la información de las personas que tienen acceso al sistema, como agricultores, técnicos y administradores. 
+
+   - **Uso en el sistema:**  
+     - Permite registrar y autenticar usuarios para controlar el acceso al sistema.  
+     - Los usuarios pueden recibir alertas sobre problemas en el sistema de riego.  
+
+---
+
+### 2. **sensores**  
+   - **Descripción:** Contiene información sobre los sensores instalados en el campo para monitorear variables como humedad, temperatura, presión del agua, etc.  
+
+   - **Uso en el sistema:**  
+     - Los sensores recopilan información en tiempo real para optimizar el riego.  
+     - Permiten detectar problemas como falta de humedad o exceso de temperatura.  
+
+---
+
+### 3. **registros_sensores**  
+   - **Descripción:** Guarda los datos capturados por los sensores en intervalos de tiempo específicos.  
+
+   - **Uso en el sistema:**  
+     - Permite analizar cómo cambian las condiciones del suelo y del ambiente con el tiempo.  
+     - Sirve como base para automatizar el riego en función de las mediciones.  
+
+---
+
+### 4. **valvulas**  
+   - **Descripción:** Contiene información sobre las válvulas encargadas de controlar el flujo de agua en diferentes sectores del campo.  
+
+   - **Uso en el sistema:**  
+     - Permite activar o desactivar el riego en áreas específicas según las necesidades del cultivo.  
+     - Puede ser controlado manualmente por el usuario o de manera automática.  
+
+---
+
+### 5. **riegos**  
+   - **Descripción:** Registra cada evento de riego realizado en el sistema, incluyendo cuándo y cuánto se ha regado.  
+
+   - **Uso en el sistema:**  
+     - Permite hacer un seguimiento del consumo de agua y optimizar su uso.  
+     - Ayuda a identificar patrones de riego para mejorar la eficiencia.  
+
+---
+
+### 6. **configuraciones_riego**  
+   - **Descripción:** Almacena reglas y parámetros predefinidos para el riego automático basado en condiciones del suelo y del clima.  
+
+   - **Uso en el sistema:**  
+     - Evita desperdiciar agua al regar solo cuando es necesario.  
+     - Facilita la automatización de los procesos de riego sin intervención manual.  
+
+---
+
+### 7. **alertas**  
+   - **Descripción:** Almacena notificaciones generadas por el sistema cuando se detectan situaciones anómalas o críticas.  
+
+   - **Uso en el sistema:**  
+     - Notifica a los usuarios sobre problemas en el sistema de riego.  
+     - Permite tomar acciones correctivas antes de que el cultivo se vea afectado.  
+
+---
+
+## **Resumen del sistema**
+Este sistema de riego inteligente permite optimizar el uso del agua en cultivos agrícolas mediante sensores, válvulas automatizadas y registros históricos. Funciona de la siguiente manera:
+
+1. **Los sensores** capturan datos ambientales en tiempo real.  
+2. **Los registros de sensores** almacenan estos datos para su análisis.  
+3. **Las válvulas** controlan el flujo de agua hacia las plantas.  
+4. **Los riegos** se registran para hacer un seguimiento del uso del agua.  
+5. **Las configuraciones de riego** permiten programar riegos automáticos basados en las condiciones del suelo.  
+6. **Las alertas** notifican a los usuarios sobre posibles problemas en el sistema.  
+
+Este sistema ayuda a ahorrar agua, mejorar la productividad del campo y reducir la intervención manual en el proceso de riego.
