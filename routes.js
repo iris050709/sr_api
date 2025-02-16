@@ -4,8 +4,77 @@ const bcrypt = require("bcryptjs");
 const connection = require('./db');
 const multer = require('multer');
 const path = require('path');
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
 const fs = require('fs');
 const jwt = require('jsonwebtoken'); 
+const { sendResetEmail } = require('./mailer'); // Ajusta la ruta según sea necesario
+
+router.post('/send-reset-code', (req, res) => {
+    const { correo } = req.body;
+
+    if (!correo) {
+        return res.status(400).json({ message: 'Correo no proporcionado' });
+    }
+
+    const resetCode = Math.floor(100000 + Math.random() * 900000);  // Código aleatorio de 6 dígitos
+    const expirationTime = new Date(Date.now() + 15 * 60000); // Expiración en 15 minutos
+
+    // Insertar el código en la base de datos
+    connection.query(
+        'UPDATE usuarios SET resetCode = ?, resetCodeExpiration = ? WHERE correo = ?',
+        [resetCode, expirationTime, correo],
+        (err, results) => {
+            if (err) {
+                console.error('Error al insertar el código:', err);
+                return res.status(500).json({ message: 'Error al enviar el código de recuperación', error: err });
+            }
+
+            if (results.affectedRows > 0) {
+                // Enviar el correo de recuperación
+                sendResetEmail(correo, resetCode);
+
+                return res.status(200).json({ message: 'Código de recuperación enviado correctamente' });
+            } else {
+                return res.status(404).json({ message: 'Correo no encontrado en la base de datos' });
+            }
+        }
+    );
+});
+
+
+
+
+router.post("/reset-password", async (req, res) => {
+  const { correo, codigo, nuevaPassword } = req.body;
+
+  try {
+    // Consulta para buscar el usuario por correo
+    const [rows] = await connection.promise().query('SELECT * FROM usuarios WHERE correo = ?', [correo]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Usuario no encontrado." });
+    }
+
+    const usuario = rows[0];
+
+    // Verificar si el código coincide y no ha expirado
+    if (!usuario.resetCode || usuario.resetCode !== codigo || Date.now() > usuario.resetCodeExpiration) {
+      return res.status(400).json({ success: false, message: "Código inválido o expirado." });
+    }
+
+    // Hashear la nueva contraseña
+    const hashedPassword = await bcrypt.hash(nuevaPassword, 10);
+
+    // Actualizar la contraseña y limpiar el código de restablecimiento
+    await connection.promise().query('UPDATE usuarios SET password = ?, resetCode = NULL, resetCodeExpiration = NULL WHERE correo = ?', [hashedPassword, correo]);
+
+    res.json({ success: true, message: "Contraseña restablecida con éxito." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Error en el servidor." });
+  }
+});
 
 const SECRET_KEY = "tu_secreto_super_seguro"; // Usa variables de entorno en producción
 router.post("/update-password", async (req, res) => {
