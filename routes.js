@@ -8,7 +8,7 @@ const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const fs = require('fs');
 const jwt = require('jsonwebtoken'); 
-const { sendResetEmail } = require('./mailer'); // Ajusta la ruta según sea necesario
+const { sendResetEmail } = require('./mailer'); 
 
 router.post('/send-reset-code', (req, res) => {
     const { correo } = req.body;
@@ -42,7 +42,44 @@ router.post('/send-reset-code', (req, res) => {
     );
 });
 
+router.post('/verify-reset-code', (req, res) => {
+  const { correo, codigo } = req.body;
 
+  console.log("Datos recibidos:", correo, codigo);
+
+  if (!correo || !codigo) {
+      return res.status(400).json({ message: "Correo y código son obligatorios." });
+  }
+
+  connection.query(
+      "SELECT resetCode, resetCodeExpiration FROM usuarios WHERE correo = ?",
+      [correo],
+      (err, results) => {
+          if (err) {
+              console.error("Error al verificar el código:", err);
+              return res.status(500).json({ message: "Error del servidor." });
+          }
+
+          if (results.length === 0) {
+              return res.status(400).json({ message: "Correo no encontrado." });
+          }
+
+          const user = results[0];
+
+          // Convertir ambos valores a string para comparación segura
+          if (!user.resetCode || user.resetCode.toString() !== codigo.toString()) {
+              return res.status(400).json({ message: "Código incorrecto." });
+          }
+
+          const now = new Date();
+          if (new Date(user.resetCodeExpiration) < now) {
+              return res.status(400).json({ message: "Código expirado." });
+          }
+
+          return res.status(200).json({ success: true, message: "Código correcto." });
+      }
+  );
+});
 
 
 router.post("/reset-password", async (req, res) => {
