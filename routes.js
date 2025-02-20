@@ -17,10 +17,10 @@ router.post('/send-reset-code', (req, res) => {
         return res.status(400).json({ message: 'Correo no proporcionado' });
     }
 
-    const resetCode = Math.floor(100000 + Math.random() * 900000);  // Código aleatorio de 6 dígitos
-    const expirationTime = new Date(Date.now() + 15 * 60000); // Expiración en 15 minutos
+    const resetCode = Math.floor(100000 + Math.random() * 900000);  
+    const expirationTime = new Date(Date.now() + 15 * 60000); 
 
-    // Insertar el código en la base de datos
+    
     connection.query(
         'UPDATE usuarios SET resetCode = ?, resetCodeExpiration = ? WHERE correo = ?',
         [resetCode, expirationTime, correo],
@@ -31,7 +31,7 @@ router.post('/send-reset-code', (req, res) => {
             }
 
             if (results.affectedRows > 0) {
-                // Enviar el correo de recuperación
+              
                 sendResetEmail(correo, resetCode);
 
                 return res.status(200).json({ message: 'Código de recuperación enviado correctamente' });
@@ -66,7 +66,7 @@ router.post('/verify-reset-code', (req, res) => {
 
           const user = results[0];
 
-          // Convertir ambos valores a string para comparación segura
+          
           if (!user.resetCode || user.resetCode.toString() !== codigo.toString()) {
               return res.status(400).json({ message: "Código incorrecto." });
           }
@@ -86,7 +86,7 @@ router.post("/reset-password", async (req, res) => {
   const { correo, codigo, nuevaPassword } = req.body;
 
   try {
-    // Consulta para buscar el usuario por correo
+    
     const [rows] = await connection.promise().query('SELECT * FROM usuarios WHERE correo = ?', [correo]);
 
     if (rows.length === 0) {
@@ -95,15 +95,15 @@ router.post("/reset-password", async (req, res) => {
 
     const usuario = rows[0];
 
-    // Verificar si el código coincide y no ha expirado
+    
     if (!usuario.resetCode || usuario.resetCode !== codigo || Date.now() > usuario.resetCodeExpiration) {
       return res.status(400).json({ success: false, message: "Código inválido o expirado." });
     }
 
-    // Hashear la nueva contraseña
+    
     const hashedPassword = await bcrypt.hash(nuevaPassword, 10);
 
-    // Actualizar la contraseña y limpiar el código de restablecimiento
+    
     await connection.promise().query('UPDATE usuarios SET password = ?, resetCode = NULL, resetCodeExpiration = NULL WHERE correo = ?', [hashedPassword, correo]);
 
     res.json({ success: true, message: "Contraseña restablecida con éxito." });
@@ -113,7 +113,7 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-const SECRET_KEY = "tu_secreto_super_seguro"; // Usa variables de entorno en producción
+const SECRET_KEY = "tu_secreto_super_seguro"; 
 router.post("/update-password", async (req, res) => {
   const { correo, nuevaPassword } = req.body;
 
@@ -122,7 +122,7 @@ router.post("/update-password", async (req, res) => {
   }
 
   try {
-      // Verificar si el correo existe en la base de datos
+      
       connection.query(
           "SELECT id FROM usuarios WHERE correo = ?",
           [correo],
@@ -139,7 +139,7 @@ router.post("/update-password", async (req, res) => {
               const userId = results[0].id;
               const hashedPassword = await bcrypt.hash(nuevaPassword, 10);
 
-              // Actualizar la contraseña en la base de datos
+              
               connection.query(
                   "UPDATE usuarios SET password = ? WHERE id = ?",
                   [hashedPassword, userId],
@@ -181,20 +181,20 @@ router.post("/login", (req, res) => {
 
       const usuario = results[0];
 
-      // Verificamos la contraseña con bcrypt
+      
       const match = await bcrypt.compare(password, usuario.password);
       if (!match) {
         return res.status(401).json({ error: "Correo o contraseña incorrectos." });
       }
 
-      // Generamos un token JWT
+      
       const token = jwt.sign(
         { id: usuario.id, correo: usuario.correo, rol: usuario.rol },
         SECRET_KEY,
         { expiresIn: "2h" }
       );
 
-      // Extraer solo el nombre del archivo de la imagen
+      
       const fotoNombre = usuario.foto ? path.basename(usuario.foto) : null;
 
       res.json({
@@ -207,7 +207,7 @@ router.post("/login", (req, res) => {
           rol: usuario.rol,
           sexo: usuario.sexo,
           fecha_nacimiento: usuario.fecha_nacimiento,
-          foto: fotoNombre, // Solo el nombre del archivo
+          foto: fotoNombre, 
         },
         token,
       });
@@ -228,7 +228,7 @@ router.get('/api/perfil', (req, res) => {
   });
 });
 
-// Configuración de almacenamiento para multer
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const uploadDir = path.join(__dirname, 'uploads');
@@ -245,7 +245,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Ruta para registrar usuario
+
 router.post("/usuarios", upload.single('foto'), (req, res) => {
     console.log("📥 Datos recibidos:", req.body);
     console.log("📸 Archivo recibido:", req.file);
@@ -258,7 +258,7 @@ router.post("/usuarios", upload.single('foto'), (req, res) => {
         return res.status(400).json({ error: "Todos los campos son obligatorios" });
     }
 
-    // Función para calcular la edad
+    
     const calcularEdad = (fechaNacimiento) => {
         const hoy = new Date();
         const nacimiento = new Date(fechaNacimiento);
@@ -270,13 +270,13 @@ router.post("/usuarios", upload.single('foto'), (req, res) => {
         return edad;
     };
 
-    // Validar que el usuario tenga al menos 18 años
+    
     if (calcularEdad(fecha_nacimiento) < 18) {
         console.log("⛔ Error: Usuario menor de edad");
         return res.status(403).json({ error: "Debes tener al menos 18 años para registrarte" });
     }
 
-    // Verificar si el correo ya existe
+    
     const checkEmailQuery = "SELECT * FROM usuarios WHERE correo = ?";
     connection.query(checkEmailQuery, [correo], (err, results) => {
         if (err) {
@@ -291,14 +291,14 @@ router.post("/usuarios", upload.single('foto'), (req, res) => {
             return res.status(400).json({ error: "El correo ya está registrado" });
         }
 
-        // Encriptar contraseña antes de guardarla
+        
         bcrypt.hash(password, 10, (err, hashedPassword) => {
             if (err) {
                 console.error("❌ Error al encriptar la contraseña:", err);
                 return res.status(500).json({ error: "Error al encriptar la contraseña" });
             }
 
-            // Insertar usuario en la base de datos
+            
             const insertQuery = "INSERT INTO usuarios (nombre, correo, password, rol, foto, fecha_nacimiento, sexo) VALUES (?, ?, ?, ?, ?, ?, ?)";
             connection.query(insertQuery, [nombre, correo, hashedPassword, rol, foto, fecha_nacimiento, sexo], (err, result) => {
                 if (err) {
@@ -314,7 +314,7 @@ router.post("/usuarios", upload.single('foto'), (req, res) => {
 
 
 
-// Obtener todos los usuarios
+
 router.get('/usuarios', (req, res) => {
   connection.query('SELECT * FROM usuarios', (err, results) => {
     if (err) {
@@ -326,14 +326,7 @@ router.get('/usuarios', (req, res) => {
   });
 });
 
-// Ruta para login de usuario
-// Ruta para iniciar sesión (login)
-// Ruta para iniciar sesión (login)
 
-
-
-
-// Ruta para validar si el correo existe
 router.post("/login/validate", (req, res) => {
   const { correo } = req.body;
 
@@ -341,7 +334,7 @@ router.post("/login/validate", (req, res) => {
     return res.status(400).json({ error: "Correo es requerido" });
   }
 
-  // Consultar el usuario por correo
+
   const query = "SELECT * FROM usuarios WHERE correo = ?";
   connection.query(query, [correo], (err, results) => {
     if (err) {
@@ -353,26 +346,26 @@ router.post("/login/validate", (req, res) => {
       return res.status(404).json({ error: "Correo no registrado" });
     }
 
-    // Si el correo existe, respondemos con un mensaje de éxito
+    
     res.status(200).json({ message: "Correo válido" });
   });
 });
 
 
-// Middleware para verificar el JWT (si usas JWT)
+
 const verifyToken = (req, res, next) => {
-  const token = req.header('Authorization')?.split(' ')[1]; // Obtenemos el token de la cabecera
+  const token = req.header('Authorization')?.split(' ')[1]; 
 
   if (!token) return res.status(401).json({ error: 'Acceso denegado. No se encontró el token.' });
 
-  jwt.verify(token, 'mi_secreto', (err, user) => { // 'mi_secreto' es la clave que usas para firmar el JWT
+  jwt.verify(token, 'mi_secreto', (err, user) => { 
       if (err) return res.status(403).json({ error: 'Token no válido' });
-      req.user = user; // Aquí guardamos la información del usuario
+      req.user = user;
       next();
   });
 };
 
-// Ruta para obtener el perfil del usuario por ID
+
 router.get('/usuarios/:id', verifyToken, (req, res) => {
   const id = req.params.id;
 
